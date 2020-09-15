@@ -26,7 +26,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.pentaho.di.base.AbstractBaseCommandExecutor;
 import org.pentaho.di.base.CommandExecutorCodes;
-import org.pentaho.di.base.KettleConstants;
 import org.pentaho.di.base.Params;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.Result;
@@ -40,8 +39,9 @@ import org.pentaho.di.core.parameters.UnknownParamException;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.util.FileUtil;
 import org.pentaho.di.core.util.Utils;
-import org.pentaho.di.core.xml.XMLHandler;
 import org.pentaho.di.core.vfs.KettleVFS;
+import org.pentaho.di.core.xml.XMLHandler;
+import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.repository.RepositoriesMeta;
 import org.pentaho.di.repository.Repository;
 import org.pentaho.di.repository.RepositoryDirectoryInterface;
@@ -49,7 +49,6 @@ import org.pentaho.di.repository.RepositoryMeta;
 import org.pentaho.di.repository.RepositoryOperation;
 import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
-import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.step.RowAdapter;
 import org.pentaho.di.trans.step.StepInterface;
 import org.w3c.dom.Document;
@@ -74,10 +73,12 @@ public class PanCommandExecutor extends AbstractBaseCommandExecutor {
   }
 
   public Result execute( final Params params ) throws Throwable {
+    return execute( params, null );
+  }
+
+  public Result execute( final Params params, String[] arguments  ) throws Throwable {
 
     getLog().logMinimal( BaseMessages.getString( getPkgClazz(), "Pan.Log.StartingToRun" ) );
-
-    Date start = Calendar.getInstance().getTime(); // capture execution start time
 
     logDebug( "Pan.Log.AllocatteNewTrans" );
 
@@ -114,6 +115,11 @@ public class PanCommandExecutor extends AbstractBaseCommandExecutor {
           // In case we use a repository...
           // some commands are to load a Trans from the repo; others are merely to output some repo-related information
           RepositoryMeta repositoryMeta = loadRepositoryConnection( params.getRepoName(), "Pan.Log.LoadingAvailableRep", "Pan.Error.NoRepsDefined", "Pan.Log.FindingRep" );
+
+          if ( repositoryMeta == null ) {
+            System.out.println( BaseMessages.getString( getPkgClazz(), "Pan.Error.CanNotConnectRep" ) );
+            return exitWithStatus( CommandExecutorCodes.Pan.COULD_NOT_LOAD_TRANS.getCode() );
+          }
 
           logDebug( "Pan.Log.CheckSuppliedUserPass" );
           repository = establishRepositoryConnection( repositoryMeta, params.getRepoUsername(), params.getRepoPassword(), RepositoryOperation.EXECUTE_TRANSFORMATION );
@@ -163,6 +169,8 @@ public class PanCommandExecutor extends AbstractBaseCommandExecutor {
       }
     }
 
+    Date start = Calendar.getInstance().getTime(); // capture execution start time
+
     try {
 
       trans.setLogLevel( getLog().getLogLevel() );
@@ -184,7 +192,7 @@ public class PanCommandExecutor extends AbstractBaseCommandExecutor {
 
       // allocate & run the required sub-threads
       try {
-        trans.prepareExecution( convert(  KettleConstants.toTransMap( params ) ) );
+        trans.prepareExecution( arguments );
 
         if ( !StringUtils.isEmpty( params.getResultSetStepName() ) ) {
 

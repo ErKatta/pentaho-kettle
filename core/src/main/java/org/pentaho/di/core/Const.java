@@ -1336,6 +1336,16 @@ public class Const {
   public static final String KETTLE_MAX_ARG_STRLEN_DEFAULT_STRING = String.valueOf( KETTLE_MAX_ARG_STRLEN_DEFAULT );
 
   /**
+   * <p>This environment variable is used by XSD validation steps to enable or disable external entities.</p>
+   * <p>By default external entities are allowed.</p>
+   */
+  public static final String ALLOW_EXTERNAL_ENTITIES_FOR_XSD_VALIDATION = "ALLOW_EXTERNAL_ENTITIES_FOR_XSD_VALIDATION";
+  public static final String ALLOW_EXTERNAL_ENTITIES_FOR_XSD_VALIDATION_DEFAULT = "true";
+
+  /** A variable to configure a timeout for Karaf provider delays on kitchen */
+  public static final String KITCHEN_KARAF_TIMEOUT_SECONDS = "KITCHEN_KARAF_TIMEOUT_SECONDS";
+  
+  /**
    * rounds double f to any number of places after decimal point Does arithmetic using BigDecimal class to avoid integer
    * overflow while rounding
    *
